@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propriedades</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="Dashboard.css">
+    <style>
+        .status.disponivel {
+            color: green;
+        }
+        .status.reservado {
+            color: orange;
+        }
+        .btn-acoes {
+            padding: 6px 10px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-excluir {
+            background-color: #dc3545; /* vermelho */
+            color: white;
+        }
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #28a745;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, bottom 0.5s ease-in-out;
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+        .fade-out {
+            transition: opacity 0.5s ease-out;
+            opacity: 0;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        #image-preview img {
+            height: 50px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <button id="toggle-sidebar"><i class="fas fa-bars"></i></button>
+            <nav class="navbar">
+                <div class="notification-icon" onclick="mostrarNotificacoes()">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notification-badge">0</span>
+                </div>
+            </nav>
+            <nav>
+                <ul>
+                    <li><a href="Dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="Propriedades.html"><i class="fas fa-building"></i> Propriedades</a></li>
+                    <li><a href="Anuncio.html"><i class="fas fa-bullhorn"></i> Anúncios</a></li>
+                    <li><a href="Leads.html"><i class="fas fa-user-friends"></i> Leads</a></li>
+                    <li><a href="Agenda.html"><i class="fas fa-calendar-alt"></i> Agenda</a></li>
+                    <li><a href="Estatistica.html"><i class="fas fa-chart-bar"></i> Estatísticas</a></li>
+                    <li><a href="Configuracoes.html"><i class="fas fa-cog"></i> Configurações</a></li>
+                    <li><a href="inicial.html"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="header">
+                <h1>Propriedades</h1>
+                <form class="search-form" action="https://www.google.com/search" method="get" target="_blank">
+                    <input type="search" name="q" placeholder="Buscar...">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+            </header>
+            <section class="main-content">
+                <section class="add-property-form">
+                    <h2>Adicionar Propriedades</h2>
+                    <form id="add-property-form" enctype="multipart/form-data">
+                        <input type="text" id="property-name" name="name" placeholder="Bairro do Imóvel" required>
+                        <input type="text" id="property-description" name="descricao" placeholder="Descrição do Imóvel" required>
+                        <input type="text" id="property-endereco" name="endereco" placeholder="Endereço do Imóvel" required>
+                        <input type="number" id="property-valor" name="valor" placeholder="Valor do Imóvel" required>
+                        <select id="property-status" name="status" required>
+                            <option value="disponivel">Disponível</option>
+                            <option value="reservado">Reservado</option>
+                        </select>
+                        <select id="property-type" name="type" required>
+                            <option value="casa">Casa</option>
+                            <option value="apartamento">Apartamento</option>
+                        </select>
+                        <select id="property-modalidade" name="modalidade" required>
+                            <option value="venda">Venda</option>
+                            <option value="aluguel">Aluguel</option>
+                        </select>
+                        <input type="file" id="property-images" name="images" accept="image/*" multiple>
+                        <div id="image-preview"></div>
+                        <button type="submit" id="btn-add">Adicionar</button>
+                    </form>
+                </section>
+                <section class="properties">
+                    <table class="properties-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Status</th>
+                                <th>Tipo</th>
+                                <th>Modalidade</th>
+                                <th>Valor</th>
+                                <th>Endereço</th>
+                                <th>Imagens</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast" class="toast">Propriedade excluída com sucesso!</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const API_PUBLIC = 'http://localhost:5001/api/properties/public';
+  const API_POST   = 'http://192.168.15.14:5001/api/properties';
+
+  // 1. Lê o parâmetro mode da URL
+  const params = new URLSearchParams(window.location.search);
+  const mode   = params.get('mode'); // 'rent' ou 'sale'
+
+  // 2. Ajusta o título da página
+  const heading = document.querySelector('header h1');
+  if (mode === 'rent') {
+    heading.textContent = 'Propriedades para Alugar';
+  } else if (mode === 'sale') {
+    heading.textContent = 'Propriedades';
+  }
+
+  const form  = document.getElementById('add-property-form');
+  const tbody = document.querySelector('.properties-table tbody');
+  const btnAdd = document.getElementById('btn-add');
+
+  function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast show ${type === 'error' ? 'error' : ''}`;
+    setTimeout(() => toast.className = 'toast', 3000);
+  }
+
+  // 3. Carrega e filtra as propriedades conforme mode
+  async function carregarPropriedades() {
+    tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
+    try {
+      const res = await fetch(API_PUBLIC);
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const dados = await res.json();
+
+      // filtra por modalidade
+      let lista = dados;
+      if (mode === 'rent') lista = dados.filter(p => p.modalidade === 'aluguel');
+      else if (mode === 'sale') lista = dados.filter(p => p.modalidade === 'venda');
+
+      tbody.innerHTML = '';
+      lista.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.name || ''}</td>
+          <td class="status ${p.status}">${p.status || ''}</td>
+          <td>${p.type || ''}</td>
+          <td>${p.modalidade || ''}</td>
+          <td>${p.valor ? 'R$ ' + parseFloat(p.valor)
+             .toLocaleString('pt-BR',{minimumFractionDigits:2}) : ''}</td>
+          <td>${p.endereco || ''}</td>
+          <td>${(p.images||[]).map(img=>`<img src="${img}" height="40" style="margin:2px;">`).join('')}</td>
+          <td><button class="btn-excluir" data-id="${p._id}">Excluir</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8">Nenhuma propriedade para ${mode==='rent'?'aluguel':'venda'}.</td></tr>`;
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao carregar propriedades','error');
+    }
+  }
+
+  // 4. Envio do formulário de inclusão
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    btnAdd.disabled = true;
+    const formData = new FormData(form);
+    try {
+      const res = await fetch(API_POST, { method:'POST', body:formData });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      form.reset();
+      document.getElementById('image-preview').innerHTML = '';
+      await carregarPropriedades();
+      showToast('Propriedade adicionada com sucesso');
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao adicionar propriedade','error');
+    } finally {
+      btnAdd.disabled = false;
+    }
+  });
+
+  // 5. Exclusão
+  tbody.addEventListener('click', async e => {
+    if (!e.target.classList.contains('btn-excluir')) return;
+    const id = e.target.dataset.id;
+    try {
+      const res = await fetch(`${API_POST}/${id}`, { method:'DELETE' });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      await carregarPropriedades();
+      showToast('Propriedade excluída');
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao excluir propriedade','error');
+    }
+  });
+
+  carregarPropriedades();
+});
+</script>
+</body>
+</html>

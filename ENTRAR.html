@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Entrar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <style>
+    :root {
+      --primary: #4e54c8;
+      --accent:  #6c63ff;
+      --background: #f4f5fa;
+      --white: #ffffff;
+      --gray: #aaa;
+    }
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      background: var(--background);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 320px;
+      text-align: center;
+    }
+    .container h2 {
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      border: 1px solid var(--gray);
+    }
+    .password-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    .password-container input {
+      flex: 1;
+    }
+    .password-container button {
+      position: absolute;
+      right: 0.5rem;
+      background: transparent;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    input[type="submit"], .google-btn {
+      background: var(--primary);
+      color: var(--white);
+      font-weight: 500;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    .google-btn {
+      background: #DB4437;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="E-mail ou usuário" required />
+
+      <div class="password-container">
+        <input type="password" id="password" placeholder="Senha" required />
+        <button type="button" id="togglePassword">👁️</button>
+      </div>
+
+      <input type="submit" value="Entrar" />
+    </form>
+
+    <button class="google-btn" id="googleLogin">
+      <i class="fab fa-google"></i> Entrar com Google
+    </button>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAttAHiHaWCTTU3wRyFSDCO6UEDaq7oZSY",
+      authDomain: "cadastro-f3c1c.firebaseapp.com",
+      projectId: "cadastro-f3c1c",
+      storageBucket: "cadastro-f3c1c.appspot.com",
+      messagingSenderId: "1070233886048",
+      appId: "1:1070233886048:web:ba0af13062892463631205",
+      measurementId: "G-6YB2XD8GD4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Alternar visibilidade da senha
+    document.getElementById("togglePassword").addEventListener("click", () => {
+      const input = document.getElementById("password");
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+    });
+
+    // Login com email/senha
+    document.getElementById("loginForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const cred = await auth.signInWithEmailAndPassword(username, password);
+        alert("Login bem-sucedido!");
+        // Redirecionar
+        window.location.href = "Dashboard.html";
+      } catch (error) {
+        alert("Erro no login: " + error.message);
+      }
+    });
+
+    // Login com Google
+    document.getElementById("googleLogin").addEventListener("click", async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+
+        const ref = db.collection("users").doc(user.uid);
+        const doc = await ref.get();
+
+        if (!doc.exists) {
+          await ref.set({
+            name: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        alert("Login com Google realizado!");
+        window.location.href = "Dashboard.html";
+      } catch (err) {
+        alert("Erro no login com Google: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

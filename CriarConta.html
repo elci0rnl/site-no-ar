@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro</title>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <!-- FontAwesome para ícone do Google -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <style>
+    :root {
+      --primary: #4e54c8;
+      --accent:  #6c63ff;
+      --background: #f4f5fa;
+      --white: #ffffff;
+      --gray: #aaa;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+    body {
+      background: var(--background);
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      background: var(--white);
+      padding: 2rem; border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 320px; text-align: center;
+    }
+    .container h1 { margin-bottom:1.5rem; color:var(--primary); }
+    .container input, .container button {
+      width:100%; padding:0.75rem; margin-bottom:1rem;
+      border-radius:4px; border:1px solid var(--gray);
+    }
+    .container button {
+      background:var(--primary); color:var(--white);
+      border:none; cursor:pointer; font-weight:500;
+    }
+    .container a {
+      display:block; color:var(--accent);
+      text-decoration:none; font-size:0.9rem;
+    }
+    /* Modal */
+    .modal {
+      display:none; position:fixed;
+      top:0;left:0;right:0;bottom:0;
+      background:rgba(0,0,0,0.5);
+      align-items:center; justify-content:center;
+    }
+    .modal-content {
+      background:var(--white); padding:1.5rem;
+      border-radius:6px; position:relative;
+      width:280px; text-align:center;
+    }
+    .modal-content .close {
+      position:absolute; top:8px; right:12px;
+      font-size:1.2rem; cursor:pointer; color:var(--gray);
+    }
+    .modal-content input, .modal-content button {
+      width:100%; padding:0.6rem; margin-top:1rem;
+      border-radius:4px; border:1px solid var(--gray);
+    }
+    .modal-content button {
+      background:var(--accent); color:var(--white);
+      border:none; cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Cadastro</h1>
+    <form id="cadastroForm">
+      <input id="nome" type="text" placeholder="Nome completo" required />
+      <input id="email" type="email" placeholder="E-mail" required />
+      <input id="senha" type="password" placeholder="Senha" required />
+      <input id="confirmarSenha" type="password" placeholder="Confirmar senha" required />
+      <button id="btnSignUp" type="submit">Cadastrar</button>
+    </form>
+    <button id="googleSignIn"><i class="fab fa-google"></i> Entrar com Google</button>
+    <a href="#" id="openRecSenha">Esqueceu a senha?</a>
+  </div>
+
+  <!-- Modal de Recuperação de Senha -->
+  <div id="modalRecSenha" class="modal">
+    <div class="modal-content">
+      <span id="closeRecSenha" class="close">&times;</span>
+      <h2>Recuperar Senha</h2>
+      <input id="emailRec" type="email" placeholder="Digite seu e-mail" />
+      <button id="btnRecSenha">Enviar e-mail</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs compatíveis -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Configuração Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyAttAHiHaWCTTU3wRyFSDCO6UEDaq7oZSY",
+        authDomain: "cadastro-f3c1c.firebaseapp.com",
+        projectId: "cadastro-f3c1c",
+        storageBucket: "cadastro-f3c1c.appspot.com",
+        messagingSenderId: "1070233886048",
+        appId: "1:1070233886048:web:ba0af13062892463631205",
+        measurementId: "G-6YB2XD8GD4"
+      };
+      firebase.initializeApp(firebaseConfig);
+
+      const auth = firebase.auth();
+      const db   = firebase.firestore();
+
+      // Elementos do DOM
+      const cadastroForm   = document.getElementById("cadastroForm");
+      const nomeInput      = document.getElementById("nome");
+      const emailInput     = document.getElementById("email");
+      const senhaInput     = document.getElementById("senha");
+      const confSenhaInput = document.getElementById("confirmarSenha");
+      const googleBtn      = document.getElementById("googleSignIn");
+      const linkRec        = document.getElementById("openRecSenha");
+      const modal          = document.getElementById("modalRecSenha");
+      const fecharModal    = document.getElementById("closeRecSenha");
+      const emailRecInput  = document.getElementById("emailRec");
+      const btnRecSenha    = document.getElementById("btnRecSenha");
+
+      // Validação de senhas
+      function validaSenha() {
+        const cor = confSenhaInput.value && confSenhaInput.value !== senhaInput.value
+          ? "red" : "green";
+        confSenhaInput.style.borderColor = cor;
+      }
+      senhaInput.addEventListener("input", validaSenha);
+      confSenhaInput.addEventListener("input", validaSenha);
+
+      // Cadastro com Email/Password + Firestore
+      cadastroForm.addEventListener("submit", async e => {
+        e.preventDefault();
+        if (senhaInput.value !== confSenhaInput.value) {
+          alert("As senhas não coincidem.");
+          return;
+        }
+        try {
+          const cred = await auth.createUserWithEmailAndPassword(
+            emailInput.value, senhaInput.value
+          );
+          const uid = cred.user.uid;
+          await db.collection("users").doc(uid).set({
+            name: nomeInput.value.trim(),
+            email: emailInput.value.trim(),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          alert("Cadastro realizado com sucesso!");
+          // redirecionar
+        } catch (err) {
+          alert("Erro ao cadastrar: " + err.message);
+        }
+      });
+
+      // Login/Cadastro com Google
+      googleBtn.addEventListener("click", async () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+          const result = await auth.signInWithPopup(provider);
+          const user   = result.user;
+          const ref    = db.collection("users").doc(user.uid);
+          const doc    = await ref.get();
+          if (!doc.exists) {
+            await ref.set({
+              name: user.displayName,
+              email: user.email,
+              photoURL: user.photoURL,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+          // redirecionar
+        } catch (err) {
+          alert("Erro no Google Sign-In: " + err.message);
+        }
+      });
+
+      // Modal de recuperação de senha
+      linkRec.addEventListener("click", e => {
+        e.preventDefault();
+        modal.style.display = "flex";
+      });
+      fecharModal.addEventListener("click", () => modal.style.display = "none");
+      window.addEventListener("click", e => {
+        if (e.target === modal) modal.style.display = "none";
+      });
+      btnRecSenha.addEventListener("click", async () => {
+        const emailRec = emailRecInput.value.trim();
+        if (!emailRec) {
+          alert("Informe seu e-mail.");
+          return;
+        }
+        try {
+          await auth.sendPasswordResetEmail(emailRec);
+          alert("E-mail de recuperação enviado!");
+          modal.style.display = "none";
+        } catch (err) {
+          alert("Erro ao enviar e-mail: " + err.message);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

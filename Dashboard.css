@@ -1,0 +1,484 @@
+/* Estilos básicos */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  height: 100%;
+  background-color: #f4f6f8;
+  color: #333;
+}
+
+/* Container principal com layout flexível */
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: #e0005e;
+  color: white;
+  width: 260px;
+  transition: width 0.3s ease-in-out;
+  position: sticky;
+  top: 0;
+  left: 0;
+  padding-top: 30px;
+  border-radius: 0 20px 20px 0;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+
+/* Estado recolhido do menu */
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.sidebar.collapsed .menu text{
+  display: none;
+}
+
+/* Botão de toggle (hambúrguer) */
+#toggle-sidebar {
+  background: none;
+  border: none;
+  color: #ecf0f1;
+  font-size: 24px;
+  cursor: pointer;
+  margin: 0 0 30px 20px;
+  display: block;
+  align-self: flex-start;
+}
+
+.sidebar.collapsed #toggle-sidebar {
+  margin: 15px;
+}
+
+/* Menu de navegação */
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.sidebar nav ul li {
+  padding: 0;
+  margin-bottom: 8px;
+
+}
+
+.sidebar nav ul li a {
+  color: #ecf0f1;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin: 0 10px;
+  text-align: left;
+  font-weight: 500;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.sidebar nav ul li a i {
+  font-size: 1.2em;
+  width: 24px;
+  text-align: center;
+  margin-right: 5px;
+}
+
+/* Efeito hover */
+.sidebar nav ul li a:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: black;
+}
+
+/* Conteúdo principal */
+.content {
+  flex: 1;
+  background-color: #f4f6f8;
+  padding: 30px;
+}
+
+.header{
+  background-color: #fff;
+  color: #333;
+  padding: 20px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 10px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+/* Cabeçalho */
+.header h1 {
+  margin-top: 0;
+  font-size: 2em;
+  font-weight: bold;
+  color: #333;
+}
+
+.main-content {
+  padding: 1em;
+}
+
+.content,
+header{
+  padding: 10px;
+}
+
+.summary-container { 
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border-left: 5px solid #e0005e;
+}
+
+.summary-card h2 {
+  font-size: 1.5em;
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.summary-card .value {
+  font-size: 2em;
+  font-weight: bold;
+  color: #333;
+}
+
+.summary-card .label {
+  color: #777;
+  font-size: 0.9em;
+}
+
+.views,
+.recent-messages,
+.popular-properties {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.views h2,
+.recent-messages h2,
+.popular-properties h2 {
+  font-size: 1.5em;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #555;
+}
+
+.summary h2 {
+  padding: 0 0 10px 0;
+  font-size: 1.5em;
+  font-family: 'Sagoe UI', Tohama, Gebeva, Verdana, sans-serif;
+}
+
+.views h2 {
+  position: static;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.recent-messages h2 { 
+  float: none;
+  position: static;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.popular-properties h2 {
+  float: none;
+  position: static;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+nav ul li a i {
+  margin-bottom: 6px;
+}
+
+
+.search-form {
+  margin-top: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: static;
+  left: auto;
+  top: auto;
+  margin-bottom: 20px;
+}
+
+.search-form input[type="search"] {
+  padding: 10px 15px;
+  width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.05);
+  font-size: 0.9em;
+}
+
+.search-form button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.search-form button:hover {
+  background-color: #0056b3;
+}
+
+/* Navbar (icone de notificação) */
+.navbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Container do ícone de notificação */
+.notification-icon {
+  position: relative;
+  font-size: 1.3em;   /* Tamanho do ícone */
+  cursor: pointer;
+  margin-right: 20px;
+  color: #555;
+}
+
+/* Badge que mostra a contagem */
+.badge {
+  position: absolute;
+  top: -5px;       /* Ajuste conforme necessário */
+  right: -5px;     /* Ajuste conforme necessário */
+  background-color: #ff007f;
+  color: #fff;
+  border-radius: 50%;
+  padding: 5px 8px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+/* Lista de notificações (opcional) */
+.notification-list {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 280px;
+  padding: 15px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 60px; /* Ajuste conforme necessário */
+  right: 20px;  /* Ajuste conforme necessário */
+  z-index: 1000;
+  display: none; /* Inicialmente oculto */
+}
+
+.notification-list h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: #555;
+}
+
+.notification-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.notification-list li:last-child {
+  border-bottom: none;
+}
+
+/* Seção de propriedades */
+.properties {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.properties h2 {
+  font-size: 1.5em;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #555;
+}
+
+/* Tabela de propriedades */
+.properties-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.properties-table thead {
+  background-color: #f8f8f8;
+}
+
+.properties-table th,
+.properties-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9em;
+}
+
+.properties-table th {
+  color: #666;
+  font-weight: bold;
+}
+
+.properties-table td img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 15px;
+  color: #fff;
+  font-size: 0.8em;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.status.disponivel {
+  background-color: #28a745; /* Verde */
+}
+
+.status.reservado {
+  background-color: #ffc107; /* Amarelo */
+}
+
+.status.vendido {
+  background-color: #dc3545; /* Vermelho */
+}
+
+.btn-acoes {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.btn-acoes:hover {
+  background-color: #0056b3;
+}
+
+/* Formulário de adição de propriedades */
+.add-property-form {
+  margin-bottom: 20px;
+  background-color: #fff; /* Adiciona fundo branco para melhor visualização */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-property-form h2 {
+  margin-bottom: 15px;
+  font-size: 1.3em;
+  color: #555;
+}
+
+.add-property-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #777;
+}
+
+.add-property-form input[type="text"],
+.add-property-fomr input[type="number"],
+.add-property-form input[type="file"],
+.add-property-form select {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 0.9em;
+}
+
+.add-property-form button[type="submit"] {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: auto;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease-in-out; 
+}
+
+.add-property-form button[type="submit"]:hover {
+  background-color: #1e7e34;
+}
+
+#image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+#image-preview img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+

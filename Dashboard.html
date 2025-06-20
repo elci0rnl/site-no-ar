@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Imobiliária</title>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="stylesheet" href="Dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <nav class="navbar">
+                <div class="notification-icon" onclick="mostrarNotificacoes()">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notification-badge">0</span>
+                </div>
+            </nav>
+            <div class="notification-list" id="notification-list" style="display: none;">
+                <p>Nenhuma notificação no momento.</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="Dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="Propriedades.html"><i class="fas fa-building"></i> Propriedades</a></li>
+                    <li><a href="Anuncio.html"><i class="fas fa-bullhorn"></i> Anúncios</a></li>
+                    <li><a href="Leads.html"><i class="fas fa-user-friends"></i> Leads</a></li>
+                    <li><a href="Agenda.html"><i class="fas fa-calendar-alt"></i> Agenda</a></li>
+                    <li><a href="Estatistica.html"><i class="fas fa-chart-bar"></i> Estatísticas</a></li>
+                    <li><a href="Configuracoes.html"><i class="fas fa-cog"></i> Configurações</a></li>
+                    <li><a href="inicial.html"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="content">
+            <header class="header">
+                <h1>Dashboard</h1>
+                <form class="search-form" action="https://www.google.com/search" method="get" target="_blank">
+                    <input type="search" name="q" placeholder="Buscar...">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+            </header>
+            <section class="main-content">
+                <div class="dashboard-widgets">
+                    <div class="widget card resumo-card">
+                        <h2>Resumo</h2>
+                        <div id="resumo-content">
+                            <div class="resumo-item">
+                                <i class="fas fa-building"></i>
+                                <div>
+                                    <h3>Total de Propriedades</h3>
+                                    <span id="total-propriedades">Carregando...</span>
+                                </div>
+                            </div>
+                            <div class="resumo-item">
+                                <i class="fas fa-user-friends"></i>
+                                <div>
+                                    <h3>Novos Leads Hoje</h3>
+                                    <span id="novos-leads">Carregando...</span>
+                                </div>
+                            </div>
+                            <div class="resumo-item">
+                                <i class="fas fa-bullhorn"></i>
+                                <div>
+                                    <h3>Anúncios Ativos</h3>
+                                    <span id="anuncios-ativos">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget card grafico-card">
+                        <h2>Visualizações</h2>
+                        <canvas id="grafico-vendas" width="800" height="200"></canvas>
+                    </div>
+
+                    <div class="widget card tabela-card">
+                        <h2>Leads Recentes</h2>
+                        <table id="tabela-leads">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Telefone</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="4">Carregando leads...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="widget card propriedades-card">
+                        <h2>Propriedades Populares</h2>
+                        <ul id="lista-propriedades-populares">
+                            <li>Carregando propriedades...</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const API_BASE = 'http://localhost:5001/api/dashboard';
+    
+        async function fetchDataAndUpdate(endpoint, elementId, processData) {
+            try {
+                const response = await fetch(`${API_BASE}/${endpoint}`);
+                if (!response.ok) throw new Error(`Erro: ${response.statusText}`);
+                const data = await response.json();
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.innerHTML = processData(data);
+                }
+            } catch (err) {
+                console.error(`Erro ao buscar ${endpoint}:`, err);
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.innerHTML = "Erro ao carregar.";
+                }
+            }
+        }
+    
+        // Resumo
+        fetchDataAndUpdate('resumo', 'resumo-content', (data) => `
+            <div class="resumo-item"><i class="fas fa-building"></i><div>
+                <h3>Total de Propriedades</h3>
+                <span id="total-propriedades">${data.totalPropriedades ?? 'N/A'}</span>
+            </div></div>
+            <div class="resumo-item"><i class="fas fa-user-friends"></i><div>
+                <h3>Novos Leads Hoje</h3>
+                <span id="novos-leads">${data.novosLeads ?? 'N/A'}</span>
+            </div></div>
+            <div class="resumo-item"><i class="fas fa-bullhorn"></i><div>
+                <h3>Anúncios Ativos</h3>
+                <span id="anuncios-ativos">${data.anunciosAtivos ?? 'N/A'}</span>
+            </div></div>
+        `);
+    
+        // Leads Recentes
+        fetchDataAndUpdate('leads', 'tabela-leads-body', (data) => {
+            return Array.isArray(data) && data.length > 0
+                ? data.map(lead => `
+                    <tr>
+                        <td>${lead.nome || 'N/A'}</td>
+                        <td>${lead.email || 'N/A'}</td>
+                        <td>${lead.telefone || 'N/A'}</td>
+                        <td>${lead.data ? new Date(lead.data).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="4">Nenhum lead recente encontrado.</td></tr>';
+        });
+    
+        // Propriedades Populares
+        fetchDataAndUpdate('propriedades-populares', 'lista-propriedades-populares', (data) => {
+            return Array.isArray(data) && data.length > 0
+                ? data.map(p => `<li>${p.nome || 'N/A'}</li>`).join('')
+                : '<li>Nenhuma propriedade popular encontrada.</li>';
+        });
+    
+        // Gráfico de Vendas
+        fetch(`${API_BASE}/vendas-mensais`)
+            .then(res => res.json())
+            .then(data => {
+                const ctx = document.getElementById('grafico-vendas').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(x => x.mes),
+                        datasets: [{
+                            label: 'Vendas Mensais (R$)',
+                            data: data.map(x => x.totalVendas),
+                            backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(err => console.error("Erro ao carregar gráfico:", err));
+    
+        // Notificações (opcional)
+        window.mostrarNotificacoes = function () {
+            const lista = document.getElementById("notification-list");
+            if (lista) {
+                lista.style.display = lista.style.display === "none" ? "block" : "none";
+            }
+        };
+    });
+    </script>
+    
+    
