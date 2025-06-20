@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma de Imóveis</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="carrossel-mobile.css">
+  <style>
+    :root {
+      --primary: #0055cc;
+      --secondary: #f7f7f7;
+      --text: #222;
+      --card: #fff;
+      --shadow: 0 4px 12px 0 rgba(0,0,0,0.08);
+    }
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin:0; background:var(--secondary); color:var(--text);}
+    header { background: var(--primary); color: #fff; text-align:center; padding:1.5rem 0; }
+    nav {
+      display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+      background: #003080;
+      padding: .5rem;
+      font-size: 1.1rem;
+    }
+    nav a { color: #fff; text-decoration: none; padding: .6rem 1.2rem; border-radius: 6px; transition: 0.2s;}
+    nav a:hover { background:var(--primary);}
+    .auth-links {margin-left:auto; gap: 1rem; display: flex;}
+
+    .search-bar {
+      background: #fff; box-shadow: var(--shadow); border-radius: 10px; margin: 2rem auto 1rem;
+      display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center;
+      width: 95%; max-width: 1100px;
+      padding: 1rem;
+    }
+    .search-bar input, .search-bar select {
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+    }
+    .search-bar button {
+      background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 0.6rem 1.2rem;
+      font-size: 1rem; cursor:pointer; transition: 0.2s;
+    }
+    .search-bar button:hover { background: #003080; }
+
+    /* Carrossel OLX style */
+    .secao-titulo {
+      font-size: 2rem;
+      font-weight: 600;
+      margin: 36px 0 26px 56px;
+      color: #262626;
+      letter-spacing: -1px;
+    }
+    .carrossel-container {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+    }
+    .carrossel-lista {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch; /* rolagem suave em iOS */
+      gap: 1rem; /* espaçamento entre cards */
+      padding-bottom: 1rem; /* evita corte no final */
+    }
+    .carrossel-lista::-webkit-scrollbar {
+      display: none;
+    }
+    .carrossel-card {
+      background: #fff;
+      border-radius: 13px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.10);
+      min-width: 240px;
+      max-width: 260px;
+      flex: 0 0 240px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #f3f3f3;
+      transition: box-shadow .17s;
+      cursor: pointer;
+      position: relative;
+    }
+    .carrossel-lista .card {
+      flex: 0 0 80%;     /* ocupa 80% da largura da viewport */
+      scroll-snap-align: start;
+      margin-right: 1rem; /* opcional, já há gap, mas se preferir */
+}
+    .carrossel-card:hover {
+      box-shadow: 0 6px 26px rgba(44, 62, 80, 0.15);
+      z-index: 2;
+    }
+    .carrossel-img-wrapper {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #f8f8fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .carrossel-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: filter .18s;
+    }
+    .carrossel-card:hover .carrossel-img {
+      filter: brightness(1.04) contrast(1.09);
+    }
+    .carrossel-info {
+      padding: 14px 16px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+    
+    .carrossel-titulo {
+      font-size: 1.07em;
+      font-weight: 600;
+      color: #331e6a;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .carrossel-local {
+      color: #888;
+      font-size: 0.97em;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .carrossel-meta {
+      display: flex;
+      gap: 7px;
+      font-size: 0.89em;
+      color: #aaa;
+    }
+    /* Botão de seta */
+    .carrossel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      background: #fff;
+      border-radius: 50%;
+      border: 1px solid #ececec;
+      box-shadow: 0 2px 8px #0001;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.5em;
+      color: #331e6a;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s;
+    }
+    .carrossel-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #btn-esquerda { left: 8px; right: auto; }
+    #btn-direita { right: 8px; left: auto; }
+
+    /* Destaques */
+    .highlight-section {
+      background: linear-gradient(120deg, #f7faff 80%, #dbebff 100%);
+      display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:2rem;
+      padding:2.8rem 2rem; border-radius: 14px; margin: 2rem auto; max-width: 1200px;
+      box-shadow: var(--shadow);
+    }
+    .highlight-image { flex:1 1 260px; max-width: 480px;}
+    .highlight-image img {width: 100%; border-radius: 14px; box-shadow: var(--shadow);}
+    .highlight-text { flex:1 1 370px; max-width: 650px;}
+    .highlight-text h2 { font-size:2rem; color: var(--primary); margin-bottom:1rem;}
+    .highlight-text h3 { margin-bottom: 0.8rem;}
+
+    /* Planos */
+    .planos-container {
+      padding: 2rem; background-color: #fff;
+    }
+    .planos-lista {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem;
+    }
+    .plano-card {
+      background: #f1f1f1; border-radius: 10px; padding: 1.5rem; width: 250px; text-align: center;
+    }
+    .plano-card.destaque { background: #fff2e0; border: 2px solid blue;}
+    .plano-card h3 { margin-top: 0; }
+    .plano-card button {
+      background-color: #0055cc; color: white; padding: 0.5rem 1rem; border: none;
+      border-radius: 5px; cursor: pointer;
+    }
+
+    /* Outros planos */
+    .outros-planos {
+      padding: 2rem; background-color: #f7f7f7; text-align: center;
+    }
+    .outros-planos-lista {
+      display: flex; justify-content: center; gap: 2rem; margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .outros-planos-card {
+      background-color: white; border-radius: 10px; padding: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+    .outros-planos-card h3 { margin-top: 0; }
+
+    /* Chat Widget */
+    #chat-widget {
+      position: fixed;
+      bottom: 90px;
+      right: 24px;
+      width: 360px;
+      max-height: 500px;
+      border-radius: 16px;
+      background: #ffffff;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+      z-index: 1000;
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s ease-in-out;
+    }
+    #chat-widget.open {
+      display: flex;
+    }
+    #chat-log {
+      flex: 1;
+      padding: 18px;
+      overflow-y: auto;
+      background: #f6f7f9;
+      font-size: 0.95rem;
+      color: #333;
+      scroll-behavior: smooth;
+    }
+    #chat-input {
+      display: flex;
+      border-top: 1px solid #e6e6e6;
+      background: #fff;
+      padding: 12px;
+    }
+    #input-msg {
+      flex: 1;
+      padding: 12px 14px;
+      border: 1px solid #d0d0d0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    #input-msg:focus {
+      border-color: #0066cc;
+    }
+    #btn-send {
+      margin-left: 10px;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      transition: background 0.3s ease, transform 0.1s ease;
+    }
+    #btn-send:hover {
+      background: linear-gradient(135deg, #0056b3, #004099);
+      transform: scale(1.05);
+    }
+    .chat-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      border: none;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      z-index: 1100;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .chat-toggle:hover {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    #chat-log {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  overflow-y: auto;
+  height: 80vh;
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.message {
+  display: flex;
+  align-items: flex-end;
+  margin: 10px 0;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.message.user {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  font-size: 15px;
+  margin: 0 10px;
+  background: #e0e0e0;
+  border-radius: 50%;
+  padding: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.bubble {
+  max-width: 70%;
+  padding: 12px 18px;
+  border-radius: 20px;
+  font-size: 16px;
+  line-height: 1.4;
+  position: relative;
+}
+
+.user .bubble {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+  border-bottom-right-radius: 0;
+}
+
+.bot .bubble {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  color: #fff;
+  border-bottom-left-radius: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+    
+
+    /* MOBILE QUERIES */
+    @media (max-width: 900px) {
+      .planos-lista, .outros-planos-lista { flex-direction: column; align-items: center; }
+      .planos-container, .outros-planos, .highlight-section { padding: 1.2rem 0.5rem; }
+    }
+    @media (max-width: 700px) {
+      .carrossel-container { padding: 0 8px; }
+      .secao-titulo { font-size: 1.2rem; margin-left: 12px; }
+      .carrossel-card { min-width: 81vw; max-width: 84vw;}
+      #btn-esquerda, #btn-direita { width: 32px; height: 32px; font-size: 1.2em;}
+      .search-bar { padding: .7rem .5rem .7rem .5rem; }
+      nav a { font-size: 1rem; padding: .5rem .8rem; }
+      .highlight-section, .planos-container, .outros-planos { padding: 0.7rem 0.3rem; }
+    }
+    @media (max-width: 500px) {
+      .carrossel-lista { gap: 10px; }
+      .carrossel-card { min-width: 95vw; max-width: 97vw;}
+      .carrossel-info { padding: 10px 6px 10px 8px; }
+      .carrossel-preco, .carrossel-titulo { font-size: 1em; }
+      .highlight-text h2 { font-size: 1.1rem;}
+    }
+    @media (max-width: 400px) {
+      #chat-widget { width: 98vw !important; right: 1vw; left: 1vw; }
+    }
+
+    .btn-comprar {
+  margin-top: 8px;
+  background: #28a745;
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.btn-comprar:hover {
+  background: #218838;
+}
+
+
+@media (max-width: 700px) {
+  .carrossel-container {
+    padding: 0 2vw;
+    margin: 0 0 24px 0;
+  }
+  .secao-titulo {
+    font-size: 1.1rem;
+    margin-left: 2vw;
+    margin-top: 18px;
+    margin-bottom: 12px;
+  }
+  .carrossel-lista {
+    gap: 7px;
+    padding-bottom: 10px;
+  }
+  .carrossel-card {
+    min-width: 94vw;
+    max-width: 98vw;
+    box-sizing: border-box;
+  }
+}
+@media (max-width: 500px) {
+  .carrossel-lista {
+    gap: 4px;
+  }
+  .carrossel-card {
+    min-width: 98vw;
+    max-width: 99vw;
+  }
+}
+
+#property-list {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding: 16px 0;
+  scroll-snap-type: x mandatory;
+}
+.carrossel-card {
+  flex: 0 0 90vw;
+  max-width: 300px;
+  min-width: 260px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin: 0 8px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.carrossel-img-wrapper {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.carrossel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.carrossel-info {
+  padding: 12px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.carrossel-preco {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #247b56;
+}
+.carrossel-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.carrossel-local {
+  font-size: 0.9rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-comprar {
+  margin-top: 10px;
+  padding: 8px 0;
+  background: #247b56;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+.btn-comprar:hover {
+  background: #1b5e40;
+}
+
+/* Esconde as setas padrão no mobile, se quiser */
+@media (max-width: 600px) {
+  #btn-direita, #btn-esquerda {
+    display: none !important;
+  }
+  .carrossel-img-wrapper {
+    height: 130px;
+  }
+  .carrossel-card {
+    min-width: 85vw;
+    max-width: 95vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .carrossel-btn {
+    display: none;
+  }
+}
+
+
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1><i class="fa-solid fa-building"></i> Pra já Imóveis</h1>
+  </header>
+  <nav>
+    <a href="#">Comprar</a>
+    <a href="#">Alugar</a>
+    <a href="#">Lançamentos</a>
+    <div class="auth-links">
+      <a href="CriarConta.html"><i class="fa-regular fa-user"></i> Criar Conta</a>
+      <a href="ENTRAR.html"><i class="fa-solid fa-arrow-right-to-bracket"></i> Entrar</a>
+    </div>
+  </nav>
+  <section class="search-bar">
+    <input type="text" id="search-name" placeholder="Pesquisar por nome">
+    <select id="filter-type">
+      <option value="">Todos os tipos</option>
+      <option value="casa">Casa</option>
+      <option value="apartamento">Apartamento</option>
+    </select>
+    <select id="filter-modalidade">
+      <option value="">Todas as modalidades</option>
+      <option value="venda">Venda</option>
+      <option value="aluguel">Aluguel</option>
+    </select>
+    <button onclick="carregarImoveis()"><i class="fa-solid fa-magnifying-glass"></i> Pesquisar</button>
+  </section>
+  <h2 class="secao-titulo">Casas disponíveis</h2>
+  <div class="carrossel-container">
+  <button class="carrossel-btn" id="btn-esquerda" aria-label="Anterior">
+    <i class="fa fa-chevron-left"></i>
+  </button>
+  <div class="carrossel-lista" id="property-list">
+    <!-- Os cards serão renderizados via JS -->
+  </div>
+  <button class="carrossel-btn" id="btn-direita" aria-label="Próximo">
+    <i class="fa fa-chevron-right"></i>
+  </button>
+</div>
+
+  <!-- Destaques -->
+  <section class="highlight-section">
+    <div class="highlight-text">
+        <h2>Encontre o plano perfeito para o seu negócio. Pensamos em cada detalhe para você.</h2>
+        <h3>Entenda como funciona</h3>
+        <p><b>Novos Anúncios Todo Mês, Resultados Duradouros:</b> <br>
+            Seu plano te dá a capacidade de adicionar novos anúncios mensalmente, com cada um deles permanecendo ativo por até 60 dias. Quer um exemplo? Com o Plano 5, são 5 novos anúncios todos os meses! <br>
+            <b>Performance Sob Seu Controle: </b><br>
+            Economize enquanto utiliza uma plataforma inteligente, criada para que você monitore o desempenho dos seus anúncios e impulsione seu negócio. <br>
+            <b>Contrate Sem Riscos, Cancele Quando Quiser: </b><br>
+            Não perca tempo! Assine agora e tenha a tranquilidade de poder ajustar ou cancelar seu plano a qualquer momento, sem custos adicionais.</p>
+    </div>
+    <div class="highlight-image">
+        <img src="imagens1/premium_photo-1661507085068-176243aaebb6.jpeg" alt="Casal" style="width: 100%; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transform: rotate(1deg);">
+    </div>
+  </section>
+
+  <section class="highlight-section">
+    <div class="highlight-text">
+        <h2>Não perca mais oportunidades!</h2>
+        <p>O maior portal imobiliário o palco ideal para seus imóveis. Corretores, imobiliárias e incorporadoras: Aumentem sua visibilidade e recebam um volume incrível de contatos qualificados. Comece agora!</p>
+        <button style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Anunciar imóveis</button>
+    </div>
+    <div class="highlight-image">
+        <img src="imagens1/orcamento-empresarial-graficos.jpg.webp" alt="pessoas em reunião imobiliario">
+    </div>
+  </section>
+
+  <!-- Planos -->
+  <section class="planos-container">
+    <h2 style="text-align: center; margin-bottom: 2rem;">Planos de Anúncios</h2>
+    <div class="planos-lista">
+      <div class="plano-card">
+        <h3>PLANO IMÓVEIS 5</h3>
+        <p><strong>5 ANÚNCIOS / MÊS</strong></p>
+        <p style="font-size: 1.8rem; color: #333;">R$ 225,99 <span style="font-size: 0.9rem;">/ mês</span></p>
+        <button>Contratar agora</button>
+      </div>
+      <div class="plano-card destaque">
+        <h3>PLANO IMÓVEIS 15</h3>
+        <p><strong>15 ANÚNCIOS / MÊS</strong></p>
+        <p style="font-size: 1.8rem; color: #333;">R$ 408,99 <span style="font-size: 0.9rem;">/ mês</span></p>
+        <button>Contratar agora</button>
+      </div>
+      <div class="plano-card">
+        <h3>PLANO IMÓVEIS 60</h3>
+        <p><strong>60 ANÚNCIOS / MÊS</strong></p>
+        <p style="font-size: 1.8rem; color: #333;">R$ 639,99 <span style="font-size: 0.9rem;">/ mês</span></p>
+        <button>Contratar agora</button>
+      </div>
+    </div>
+    <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">O plano tem cobrança mensal recorrente. Pode cancelar a qualquer momento sem multa.</p>
+  </section>
+
+  <!-- Outros Planos -->
+  <section class="outros-planos">
+    <h2>Quer conhecer outras opções de Planos?</h2>
+    <p>Convere com nossa equipe! De segunda a sexta das 08h30 ás 17h30</p>
+    <div class="outros-planos-lista">
+      <div class="outros-planos-card">
+        <div style="background-color: #f0f0f5; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem;">
+          <img src="imagens1/TELEFONE.webp" alt="Telefone" style="width: 50px; height: 50px; color: #a0a0c0;">
+        </div>
+        <h3>Telefone</h3>
+        <a href="tel:08000229800" style="display: inline-block; padding: 0.5rem 1rem; border: 1px solid #e0e0e0; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.9rem;">Ligue 0800 022 9800</a>
+      </div>
+      <div class="outros-planos-card">
+        <div style="background-color: #e0f7fa; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem;">
+          <img src="imagens1/HEADSET.jpg" alt="Ligamos pra você" style="width: 50px; height: 50px; color: #4dd0e1;">
+        </div>
+        <h3>A gente te liga</h3>
+        <button style="padding: 0.5rem 1rem; border: 1px solid #e0e0e0; border-radius: 5px; background-color: white; color: #333; font-size: 0.9rem; cursor: pointer;">Enviar Mensagem</button>
+      </div>
+      <div class="outros-planos-card">
+        <div style="background-color: #e8f5e9; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem;">
+          <img src="imagens1/WHATSAPP.avif" alt="Whatsapp" style="width: 60px; height: 60px; color: #4caf50;">
+        </div>
+        <h3>Whatsapp</h3>
+        <a href="https://wa.me/5515998010420" target="_blank" style="display: inline-block; padding: 0.5rem 1rem; border: 1px solid #e0e0e0; border-radius: 5px; background-color: white; color: #333; font-size: 0.9rem; cursor: pointer; text-decoration: none;">Comercial</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chat Widget -->
+  <div id="chat-widget" class="chat-widget">
+    <div id="chat-log"></div>
+    <div id="chat-input">
+      <input id="input-msg" type="text" placeholder="Escreva aqui..." />
+      <button id="btn-send">Enviar</button>
+    </div>
+  </div>
+  <button class="chat-toggle" id="chat-toggle">💬</button>
+
+  <script>
+    //const BACKEND_URL = 'http://192.168.15.XX:5001';
+    
+    async function carregarImoveis() {
+      const nome = document.getElementById('search-name').value.toLowerCase();
+      const tipo = document.getElementById('filter-type').value;
+      const modalidade = document.getElementById('filter-modalidade').value;
+
+      try {
+        const res = await fetch('http://localhost:5001/api/properties/public');
+        const imoveis = await res.json();
+
+        const filtrados = imoveis.filter(imovel => {
+          return (!nome || imovel.name.toLowerCase().includes(nome)) &&
+                 (!tipo || imovel.type === tipo) &&
+                 (!modalidade || imovel.modalidade === modalidade);
+        });
+
+        const lista = document.getElementById('property-list');
+        lista.innerHTML = '';
+        filtrados.forEach(imovel => {
+          const imagem = imovel.images && imovel.images.length
+            ? `http://localhost:5001${imovel.images[0]}`
+            : 'https://via.placeholder.com/300x200';
+          lista.innerHTML += `
+  <div class="carrossel-card" tabindex="0">
+    <div class="carrossel-img-wrapper" data-id="${imovel._id}">
+      <img class="carrossel-img" src="${imagem}" alt="${imovel.name}">
+    </div>
+    <div class="carrossel-info">
+      <div class="carrossel-preco">
+        ${imovel.valor ? 'R$ ' + Number(imovel.valor).toLocaleString('pt-BR') : ''}
+      </div>
+      <div class="carrossel-titulo">${imovel.name}</div>
+      <div class="carrossel-local"><i class="fa fa-map-marker-alt"></i> ${imovel.endereco || ''}</div>
+      <button class="btn-comprar" data-id="${imovel._id}">Comprar</button>
+    </div>
+  </div>`
+
+;
+        });
+
+        atualizarSetasCarrossel();
+      } catch (error) {
+        console.error('Erro ao carregar imóveis:', error);
+      }
+    }
+
+    function atualizarSetasCarrossel() {
+      const lista = document.getElementById('property-list');
+      const btnDir = document.getElementById('btn-direita');
+      const btnEsq = document.getElementById('btn-esquerda');
+
+      // Só mostra se houver overflow
+      if (lista.scrollWidth > lista.clientWidth + 10) {
+        btnDir.classList.add('visible');
+        btnEsq.classList.add('visible');
+      } else {
+        btnDir.classList.remove('visible');
+        btnEsq.classList.remove('visible');
+      }
+      // Mostra botão esquerdo só se não está no início
+      if (lista.scrollLeft > 10) {
+        btnEsq.classList.add('visible');
+      } else {
+        btnEsq.classList.remove('visible');
+      }
+      // Mostra botão direito só se não está no fim
+      if (lista.scrollLeft < lista.scrollWidth - lista.clientWidth - 10) {
+        btnDir.classList.add('visible');
+      } else {
+        btnDir.classList.remove('visible');
+      }
+    }
+
+    document.getElementById('btn-direita').addEventListener('click', function() {
+      const lista = document.getElementById('property-list');
+      lista.scrollBy({left: 260, behavior: 'smooth'});
+      setTimeout(atualizarSetasCarrossel, 300);
+    });
+    document.getElementById('btn-esquerda').addEventListener('click', function() {
+      const lista = document.getElementById('property-list');
+      lista.scrollBy({left: -260, behavior: 'smooth'});
+      setTimeout(atualizarSetasCarrossel, 300);
+    });
+    document.getElementById('property-list').addEventListener('scroll', atualizarSetasCarrossel);
+
+    window.addEventListener('resize', atualizarSetasCarrossel);
+    window.addEventListener('DOMContentLoaded', () => {
+      carregarImoveis();
+      atualizarSetasCarrossel();
+    });
+
+    // Chat Widget script (ajuste conforme seu backend)
+    document.getElementById("chat-toggle").addEventListener("click", () => {
+      document.getElementById("chat-widget").classList.toggle("open");
+    });
+    document.getElementById("btn-send").addEventListener("click", async () => {
+      const input = document.getElementById("input-msg");
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage(text, "user");
+      input.value = "";
+      try {
+        const response = await fetch("http://localhost:5001/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text }),
+        });
+        const data = await response.json();
+        if (data.reply) {
+          addMessage(data.reply, "bot");
+        } else {
+          addMessage("Desculpe, não consegui responder agora.", "bot");
+        }
+      } catch (error) {
+        addMessage("Erro ao conectar com a IA.", "bot");
+      }
+    });
+    function addMessage(content, sender = "user") {
+      const chatLog = document.getElementById("chat-log");
+      const messageEl = document.createElement("div");
+      messageEl.className = `message ${sender}`;
+      const avatar = document.createElement("span");
+      avatar.className = "avatar";
+      avatar.textContent = sender === "user" ? "👤" : "🤖";
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = content;
+      if (sender === "user") {
+        messageEl.appendChild(bubble);
+        messageEl.appendChild(avatar);
+      } else {
+        messageEl.appendChild(avatar);
+        messageEl.appendChild(bubble);
+      }
+      chatLog.appendChild(messageEl);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    // Depois de renderizar os cards:
+document.querySelectorAll('.carrossel-img-wrapper').forEach(wrapper => {
+  wrapper.addEventListener('click', function() {
+    const id = this.getAttribute('data-id');
+    window.open('detalhes.html?id=' + id, '_blank');
+  });
+});
+
+// (Opcional) Comprar:
+document.querySelectorAll('.btn-comprar').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation(); // evita abrir detalhes ao clicar no botão
+    const id = this.getAttribute('data-id');
+    // Aqui você pode abrir um modal, redirecionar ou chamar uma função de compra
+    alert('Função de comprar para o imóvel: ' + id);
+  });
+});
+  </script>
+</body>
+</html>
