@@ -151,9 +151,10 @@
     <div id="toast" class="toast">Propriedade excluída com sucesso!</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const API_PUBLIC = 'http://localhost:5001/api/properties/public';
-  const API_POST   = 'http://192.168.15.14:5001/api/properties';
+// Substitua as constantes API_PUBLIC e API_POST por:
+const API_BASE_URL = 'http://localhost:5001'; // Em produção, use a URL pública do seu servidor
+const API_PUBLIC = `${API_BASE_URL}/api/properties/public`;
+const API_POST = `${API_BASE_URL}/api/properties`;
 
   // 1. Lê o parâmetro mode da URL
   const params = new URLSearchParams(window.location.search);
@@ -217,24 +218,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 4. Envio do formulário de inclusão
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    btnAdd.disabled = true;
-    const formData = new FormData(form);
-    try {
-      const res = await fetch(API_POST, { method:'POST', body:formData });
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      form.reset();
-      document.getElementById('image-preview').innerHTML = '';
-      await carregarPropriedades();
-      showToast('Propriedade adicionada com sucesso');
-    } catch (err) {
-      console.error(err);
-      showToast('Erro ao adicionar propriedade','error');
-    } finally {
-      btnAdd.disabled = false;
-    }
-  });
+  // No evento de envio do formulário, após adicionar com sucesso:
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  btnAdd.disabled = true;
+  const formData = new FormData(form);
+  try {
+    const res = await fetch(API_POST, { method:'POST', body:formData });
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    form.reset();
+    document.getElementById('image-preview').innerHTML = '';
+    await carregarPropriedades();
+    showToast('Propriedade adicionada com sucesso');
+    
+    // Adicione esta linha para notificar outras abas/janelas sobre a nova propriedade
+    localStorage.setItem('newPropertyAdded', Date.now().toString());
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao adicionar propriedade','error');
+  } finally {
+    btnAdd.disabled = false;
+  }
+});
 
   // 5. Exclusão
   tbody.addEventListener('click', async e => {
@@ -252,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   carregarPropriedades();
-});
+// });
 </script>
 </body>
 </html>
