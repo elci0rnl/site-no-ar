@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leads</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="Dashboard.css">
+    <style>
+        /* Estilos básicos para o formulário e tabela (podem ser movidos para styles.css) */
+        .lead-form {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9; /* Adicionado um fundo sutil */
+        }
+
+        .lead-form h2 {
+            margin-bottom: 15px;
+            color: #333; /* Título mais destacado */
+        }
+
+        .lead-form .form-group {
+            margin-bottom: 15px; /* Mais espaço entre os campos */
+        }
+
+        .lead-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555; /* Label mais visível */
+            font-weight: bold; /* Deixa o label em negrito */
+        }
+
+        .lead-form input {
+            width: calc(100% - 22px); /* Ajuste para a borda */
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px; /* Tamanho da fonte um pouco maior */
+        }
+
+        .lead-form input:focus {
+            outline: none;
+            border-color: #007bff; /* Cor de foco */
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Sutil efeito de sombra ao focar */
+        }
+
+        .lead-form button {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease; /* Transição suave no hover */
+        }
+
+        .lead-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .lead-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0; /* Ajuste na margem vertical */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sutil sombra na tabela */
+            border-radius: 8px;
+            overflow: hidden; /* Para o border-radius funcionar corretamente com o tbody */
+        }
+
+        .lead-table th, .lead-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .lead-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .lead-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9; /* Linhas pares com fundo levemente diferente */
+        }
+
+        .lead-table tbody tr:hover {
+            background-color: #e9ecef; /* Efeito de hover nas linhas */
+            transition: background-color 0.3s ease;
+        }
+
+        .empty-message {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            text-align: center;
+            color: #777;
+        }
+
+        .action-buttons button {
+            padding: 8px 12px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .action-buttons .delete-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .action-buttons .delete-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <nav class="navbar">
+                <div class="notification-icon" onclick="mostrarNotificacoes()">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notification-badge">0</span>
+                </div>
+            </nav>
+            <div class="notification-list" id="notification-list" style="display: none;">
+                <p>Nenhuma notificação no momento.</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="Dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="Propriedades.html"><i class="fas fa-building"></i> Propriedades</a></li>
+                    <li><a href="Anuncio.html"><i class="fas fa-bullhorn"></i> Anúncios</a></li>
+                    <li><a href="Leads.html"><i class="fas fa-user-friends"></i> Leads</a></li>
+                    <li><a href="Agenda.html"><i class="fas fa-calendar-alt"></i> Agenda</a></li>
+                    <li><a href="Estatistica.html"><i class="fas fa-chart-bar"></i> Estatísticas</a></li>
+                    <li><a href="Configuracoes.html"><i class="fas fa-cog"></i> Configurações</a></li>
+                    <li><a href="inicial.html"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="header">
+                <h1>Leads</h1>
+                <form class="search-form" action="https://www.google.com/search" method="get" target="_blank">
+                    <input type="search" name="q" placeholder="Buscar...">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+            </header>
+
+            <section class="lead-form">
+                <h2>Capturar Lead</h2>
+                <form id="lead-form">
+                    <div class="form-group">
+                        <label for="lead-name">Nome:</label>
+                        <input type="text" id="lead-name" placeholder="Nome completo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lead-email">E-mail:</label>
+                        <input type="email" id="lead-email" placeholder="Seu melhor e-mail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lead-phone">Telefone:</label>
+                        <input type="tel" id="lead-phone" placeholder="Número de telefone (opcional)">
+                    </div>
+                    <button type="submit"><i class="fas fa-user-plus"></i> Salvar Lead</button>
+                </form>
+                <div id="form-message" class="form-message" style="display: none;"></div>
+            </section>
+
+            <section class="lead-list">
+                <h2>Lista de Leads</h2>
+                <table class="lead-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Telefone</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lead-table-body">
+                        <tr id="empty-row" style="display: none;">
+                            <td colspan="4" class="empty-message">Nenhum lead capturado ainda.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const leadForm = document.getElementById('lead-form');
+        const leadTableBody = document.getElementById('lead-table-body');
+        const formMessage = document.getElementById('form-message');
+        const emptyRow = document.getElementById('empty-row');
+        const backendUrl = 'http://127.0.0.1:5001'; // *** CERTIFIQUE-SE QUE SEU BACKEND ESTÁ RODANDO NESTA URL ***
+
+        leadForm.addEventListener('submit', handleFormSubmit);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExistingLeads();
+        });
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('lead-name').value.trim();
+            const email = document.getElementById('lead-email').value.trim();
+            const phone = document.getElementById('lead-phone').value.trim();
+
+            if (validateForm(name, email)) {
+                saveLeadToBackend(name, email, phone);
+                leadForm.reset();
+            } else {
+                displayFormMessage('Por favor, preencha todos os campos obrigatórios.', 'error');
+            }
+        }
+
+        function validateForm(name, email) {
+            return name !== '' && email !== '';
+            // Adicione validação de e-mail mais robusta se necessário
+        }
+
+        function saveLeadToBackend(name, email, phone) {
+            fetch(`${backendUrl}/api/leads`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email, phone })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Lead salvo com sucesso:', data);
+                displayFormMessage('Lead capturado com sucesso!', 'success');
+                loadExistingLeads(); // Recarrega a lista para mostrar o novo lead
+            })
+            .catch(error => {
+                console.error('Erro ao salvar lead:', error);
+                displayFormMessage('Erro ao salvar lead.', 'error');
+            });
+        }
+
+        function addLeadToTable(lead) {
+            const newRow = leadTableBody.insertRow();
+            newRow.setAttribute('data-lead-id', lead._id || lead.id); // Assumindo que o backend retorna um ID
+
+            const cellName = newRow.insertCell(0);
+            const cellEmail = newRow.insertCell(1);
+            const cellPhone = newRow.insertCell(2);
+            const cellActions = newRow.insertCell(3);
+
+            cellName.textContent = lead.name;
+            cellEmail.textContent = lead.email;
+            cellPhone.textContent = lead.phone || '-';
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Excluir';
+            deleteButton.className = 'delete-button';
+            deleteButton.addEventListener('click', () => deleteLead(lead._id || lead.id));
+            cellActions.appendChild(deleteButton);
+
+            // Esconde a mensagem de "nenhum lead" se houver leads
+            if (leadTableBody.children.length > 0 && leadTableBody.children[0].id === 'empty-row') {
+                leadTableBody.removeChild(leadTableBody.children[0]);
+            }
+        }
+
+        function displayFormMessage(message, type = 'info') {
+            formMessage.textContent = message;
+            formMessage.className = `form-message ${type}`;
+            formMessage.style.display = 'block';
+            setTimeout(() => {
+                formMessage.style.display = 'none';
+            }, 3000); // Oculta a mensagem após 3 segundos
+        }
+
+        function loadExistingLeads() {
+            fetch(`${backendUrl}/api/leads`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(leads => {
+                    leadTableBody.innerHTML = ''; // Limpa a tabela antes de adicionar os leads
+                    if (leads && leads.length > 0) {
+                        leads.forEach(addLeadToTable);
+                        emptyRow.style.display = 'none';
+                    } else {
+                        leadTableBody.appendChild(emptyRow);
+                        emptyRow.style.display = 'table-row';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar leads:', error);
+                    displayFormMessage('Erro ao carregar leads.', 'error');
+                    leadTableBody.appendChild(emptyRow);
+                    emptyRow.style.display = 'table-row';
+                });
+        }
+
+        function deleteLead(id) {
+            if (confirm("Tem certeza que deseja excluir este lead?")) {
+                fetch(`${backendUrl}/api/leads/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Lead excluído com sucesso:', data);
+                    displayFormMessage('Lead excluído com sucesso!', 'success');
+                    // Remove a linha da tabela sem recarregar todos os leads para melhor UX
+                    const rowToDelete = document.querySelector(`[data-lead-id="${id}"]`);
+                    if (rowToDelete) {
+                        rowToDelete.remove();
+                        // Mostra a mensagem de "nenhum lead" se a tabela estiver vazia após a exclusão
+                        if (leadTableBody.children.length === 0) {
+                            leadTableBody.appendChild(emptyRow);
+                            emptyRow.style.display = 'table-row';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao excluir lead:', error);
+                    displayFormMessage('Erro ao excluir lead.', 'error');
+                });
+            }
+        }
+
+        function mostrarNotificacoes() {
+            const notificationList = document.getElementById('notification-list');
+            notificationList.style.display = notificationList.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
