@@ -662,30 +662,39 @@
   <button class="chat-toggle" id="chat-toggle">💬</button>
 
   <script>
-    //const BACKEND_URL = 'http://192.168.15.XX:5001';
-    
-    async function carregarImoveis() {
-      const nome = document.getElementById('search-name').value.toLowerCase();
-      const tipo = document.getElementById('filter-type').value;
-      const modalidade = document.getElementById('filter-modalidade').value;
+  // Defina a URL base da API - mesma usada em propriedades.html
+  const API_BASE_URL = 'http://localhost:5001'; // Em produção, use a URL pública do seu servidor
+  
+  async function carregarImoveis() {
+    const nome = document.getElementById('search-name').value.toLowerCase();
+    const tipo = document.getElementById('filter-type').value;
+    const modalidade = document.getElementById('filter-modalidade').value;
 
-      try {
-        const res = await fetch('http://localhost:5001/api/properties/public');
-        const imoveis = await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/properties/public`);
+      const imoveis = await res.json();
 
-        const filtrados = imoveis.filter(imovel => {
-          return (!nome || imovel.name.toLowerCase().includes(nome)) &&
-                 (!tipo || imovel.type === tipo) &&
-                 (!modalidade || imovel.modalidade === modalidade);
-        });
+      const filtrados = imoveis.filter(imovel => {
+        return (!nome || imovel.name.toLowerCase().includes(nome)) &&
+               (!tipo || imovel.type === tipo) &&
+               (!modalidade || imovel.modalidade === modalidade);
+      });
 
-        const lista = document.getElementById('property-list');
-        lista.innerHTML = '';
-        filtrados.forEach(imovel => {
-          const imagem = imovel.images && imovel.images.length
-            ? `http://localhost:5001${imovel.images[0]}`
-            : 'https://via.placeholder.com/300x200';
-          lista.innerHTML += `
+      const lista = document.getElementById('property-list');
+      lista.innerHTML = '';
+      
+      if (filtrados.length === 0) {
+        lista.innerHTML = '<div class="carrossel-card"><div class="carrossel-info"><p>Nenhum imóvel encontrado com os filtros selecionados.</p></div></div>';
+        return;
+      }
+      
+      filtrados.forEach(imovel => {
+        // Corrigir o caminho da imagem
+        const imagem = imovel.images && imovel.images.length
+          ? (imovel.images[0].startsWith('http') ? imovel.images[0] : `${API_BASE_URL}${imovel.images[0]}`)
+          : 'https://via.placeholder.com/300x200';
+          
+        lista.innerHTML += `
   <div class="carrossel-card" tabindex="0">
     <div class="carrossel-img-wrapper" data-id="${imovel._id}">
       <img class="carrossel-img" src="${imagem}" alt="${imovel.name}">
@@ -698,126 +707,149 @@
       <div class="carrossel-local"><i class="fa fa-map-marker-alt"></i> ${imovel.endereco || ''}</div>
       <button class="btn-comprar" data-id="${imovel._id}">Comprar</button>
     </div>
-  </div>`
+  </div>`;
+      });
 
-;
-        });
-
-        atualizarSetasCarrossel();
-      } catch (error) {
-        console.error('Erro ao carregar imóveis:', error);
-      }
-    }
-
-    function atualizarSetasCarrossel() {
-      const lista = document.getElementById('property-list');
-      const btnDir = document.getElementById('btn-direita');
-      const btnEsq = document.getElementById('btn-esquerda');
-
-      // Só mostra se houver overflow
-      if (lista.scrollWidth > lista.clientWidth + 10) {
-        btnDir.classList.add('visible');
-        btnEsq.classList.add('visible');
-      } else {
-        btnDir.classList.remove('visible');
-        btnEsq.classList.remove('visible');
-      }
-      // Mostra botão esquerdo só se não está no início
-      if (lista.scrollLeft > 10) {
-        btnEsq.classList.add('visible');
-      } else {
-        btnEsq.classList.remove('visible');
-      }
-      // Mostra botão direito só se não está no fim
-      if (lista.scrollLeft < lista.scrollWidth - lista.clientWidth - 10) {
-        btnDir.classList.add('visible');
-      } else {
-        btnDir.classList.remove('visible');
-      }
-    }
-
-    document.getElementById('btn-direita').addEventListener('click', function() {
-      const lista = document.getElementById('property-list');
-      lista.scrollBy({left: 260, behavior: 'smooth'});
-      setTimeout(atualizarSetasCarrossel, 300);
-    });
-    document.getElementById('btn-esquerda').addEventListener('click', function() {
-      const lista = document.getElementById('property-list');
-      lista.scrollBy({left: -260, behavior: 'smooth'});
-      setTimeout(atualizarSetasCarrossel, 300);
-    });
-    document.getElementById('property-list').addEventListener('scroll', atualizarSetasCarrossel);
-
-    window.addEventListener('resize', atualizarSetasCarrossel);
-    window.addEventListener('DOMContentLoaded', () => {
-      carregarImoveis();
       atualizarSetasCarrossel();
-    });
-
-    // Chat Widget script (ajuste conforme seu backend)
-    document.getElementById("chat-toggle").addEventListener("click", () => {
-      document.getElementById("chat-widget").classList.toggle("open");
-    });
-    document.getElementById("btn-send").addEventListener("click", async () => {
-      const input = document.getElementById("input-msg");
-      const text = input.value.trim();
-      if (!text) return;
-      addMessage(text, "user");
-      input.value = "";
-      try {
-        const response = await fetch("http://localhost:5001/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text }),
-        });
-        const data = await response.json();
-        if (data.reply) {
-          addMessage(data.reply, "bot");
-        } else {
-          addMessage("Desculpe, não consegui responder agora.", "bot");
-        }
-      } catch (error) {
-        addMessage("Erro ao conectar com a IA.", "bot");
-      }
-    });
-    function addMessage(content, sender = "user") {
-      const chatLog = document.getElementById("chat-log");
-      const messageEl = document.createElement("div");
-      messageEl.className = `message ${sender}`;
-      const avatar = document.createElement("span");
-      avatar.className = "avatar";
-      avatar.textContent = sender === "user" ? "👤" : "🤖";
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.textContent = content;
-      if (sender === "user") {
-        messageEl.appendChild(bubble);
-        messageEl.appendChild(avatar);
-      } else {
-        messageEl.appendChild(avatar);
-        messageEl.appendChild(bubble);
-      }
-      chatLog.appendChild(messageEl);
-      chatLog.scrollTop = chatLog.scrollHeight;
+    } catch (error) {
+      console.error('Erro ao carregar imóveis:', error);
+      document.getElementById('property-list').innerHTML = 
+        '<div class="carrossel-card"><div class="carrossel-info"><p>Erro ao carregar imóveis. Tente novamente mais tarde.</p></div></div>';
     }
+  }
 
-    // Depois de renderizar os cards:
-document.querySelectorAll('.carrossel-img-wrapper').forEach(wrapper => {
-  wrapper.addEventListener('click', function() {
-    const id = this.getAttribute('data-id');
-    window.open('detalhes.html?id=' + id, '_blank');
-  });
-});
+  function atualizarSetasCarrossel() {
+    const lista = document.getElementById('property-list');
+    const btnDir = document.getElementById('btn-direita');
+    const btnEsq = document.getElementById('btn-esquerda');
 
-// (Opcional) Comprar:
-document.querySelectorAll('.btn-comprar').forEach(btn => {
-  btn.addEventListener('click', function(e) {
-    e.stopPropagation(); // evita abrir detalhes ao clicar no botão
-    const id = this.getAttribute('data-id');
-    // Aqui você pode abrir um modal, redirecionar ou chamar uma função de compra
-    alert('Função de comprar para o imóvel: ' + id);
+    // Só mostra se houver overflow
+    if (lista.scrollWidth > lista.clientWidth + 10) {
+      btnDir.classList.add('visible');
+      btnEsq.classList.add('visible');
+    } else {
+      btnDir.classList.remove('visible');
+      btnEsq.classList.remove('visible');
+    }
+    // Mostra botão esquerdo só se não está no início
+    if (lista.scrollLeft > 10) {
+      btnEsq.classList.add('visible');
+    } else {
+      btnEsq.classList.remove('visible');
+    }
+    // Mostra botão direito só se não está no fim
+    if (lista.scrollLeft < lista.scrollWidth - lista.clientWidth - 10) {
+      btnDir.classList.add('visible');
+    } else {
+      btnDir.classList.remove('visible');
+    }
+  }
+
+  document.getElementById('btn-direita').addEventListener('click', function() {
+    const lista = document.getElementById('property-list');
+    lista.scrollBy({left: 260, behavior: 'smooth'});
+    setTimeout(atualizarSetasCarrossel, 300);
   });
-});
-  </script>
+  
+  document.getElementById('btn-esquerda').addEventListener('click', function() {
+    const lista = document.getElementById('property-list');
+    lista.scrollBy({left: -260, behavior: 'smooth'});
+    setTimeout(atualizarSetasCarrossel, 300);
+  });
+  
+  document.getElementById('property-list').addEventListener('scroll', atualizarSetasCarrossel);
+
+  // Adicione um listener para detectar mudanças no localStorage (para atualização entre abas)
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'newPropertyAdded') {
+      console.log('Nova propriedade detectada, atualizando lista...');
+      carregarImoveis();
+    }
+  });
+
+  // Opcional: Adicione um polling para atualizar a lista periodicamente
+  function iniciarAtualizacaoAutomatica(intervaloMinutos = 5) {
+    setInterval(() => {
+      console.log('Atualizando lista de imóveis...');
+      carregarImoveis();
+    }, intervaloMinutos * 60 * 1000);
+  }
+
+  window.addEventListener('resize', atualizarSetasCarrossel);
+  
+  // Inicie a atualização automática quando a página carregar
+  window.addEventListener('DOMContentLoaded', () => {
+    carregarImoveis();
+    atualizarSetasCarrossel();
+    iniciarAtualizacaoAutomatica(5); // Atualiza a cada 5 minutos
+  });
+
+  // Chat Widget script (ajuste conforme seu backend)
+  document.getElementById("chat-toggle").addEventListener("click", () => {
+    document.getElementById("chat-widget").classList.toggle("open");
+  });
+  
+  document.getElementById("btn-send").addEventListener("click", async () => {
+    const input = document.getElementById("input-msg");
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage(text, "user");
+    input.value = "";
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await response.json();
+      if (data.reply) {
+        addMessage(data.reply, "bot");
+      } else {
+        addMessage("Desculpe, não consegui responder agora.", "bot");
+      }
+    } catch (error) {
+      addMessage("Erro ao conectar com a IA.", "bot");
+    }
+  });
+  
+  function addMessage(content, sender = "user") {
+    const chatLog = document.getElementById("chat-log");
+    const messageEl = document.createElement("div");
+    messageEl.className = `message ${sender}`;
+    const avatar = document.createElement("span");
+    avatar.className = "avatar";
+    avatar.textContent = sender === "user" ? "👤" : "🤖";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = content;
+    if (sender === "user") {
+      messageEl.appendChild(bubble);
+      messageEl.appendChild(avatar);
+    } else {
+      messageEl.appendChild(avatar);
+      messageEl.appendChild(bubble);
+    }
+    chatLog.appendChild(messageEl);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  // Depois de renderizar os cards:
+  document.getElementById('property-list').addEventListener('click', function(e) {
+    // Delegação de eventos para lidar com elementos adicionados dinamicamente
+    const wrapper = e.target.closest('.carrossel-img-wrapper');
+    if (wrapper) {
+      const id = wrapper.getAttribute('data-id');
+      window.open('detalhes.html?id=' + id, '_blank');
+    }
+    
+    const btnComprar = e.target.closest('.btn-comprar');
+    if (btnComprar) {
+      e.stopPropagation(); // evita abrir detalhes ao clicar no botão
+      const id = btnComprar.getAttribute('data-id');
+      // Aqui você pode abrir um modal, redirecionar ou chamar uma função de compra
+      alert('Função de comprar para o imóvel: ' + id);
+    }
+  });
+</script>
 </body>
 </html>
